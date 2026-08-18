@@ -4,9 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createClient } from "@/lib/supabase/client";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations/auth";
-import { getAppUrl } from "@/lib/app-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,20 +26,28 @@ export function ForgotPasswordForm() {
 
   const onSubmit = async (data: ForgotPasswordInput) => {
     setLoading(true);
-    const supabase = createClient();
-    const appUrl = getAppUrl();
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
-    });
 
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-      return;
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        toast.error(result.error ?? "Failed to send reset email");
+        setLoading(false);
+        return;
+      }
+
+      setSent(true);
+      toast.success(result.message ?? "Password reset email sent!");
+    } catch {
+      toast.error("Network error. Please try again.");
     }
 
-    setSent(true);
-    toast.success("Password reset email sent!");
     setLoading(false);
   };
 
@@ -51,7 +57,9 @@ export function ForgotPasswordForm() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Check your email</CardTitle>
           <CardDescription>
-            We&apos;ve sent you a password reset link. Please check your inbox.
+            We&apos;ve sent a reset link to your inbox. Open it on this site (
+            {typeof window !== "undefined" ? window.location.host : "your live domain"}), not
+            localhost. Check spam if you don&apos;t see it within a few minutes.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -84,7 +92,11 @@ export function ForgotPasswordForm() {
             Send reset link
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm">
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          Supabase limits how many emails can be sent per hour. If you hit the limit, wait 5–10
+          minutes before trying again.
+        </p>
+        <p className="mt-2 text-center text-sm">
           <Link href="/login" className="text-primary hover:underline inline-flex items-center gap-1">
             <ArrowLeft className="h-3 w-3" />
             Back to login
