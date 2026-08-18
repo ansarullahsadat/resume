@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,14 +31,10 @@ export function TemplateGallery() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {TEMPLATES.map((template, i) => (
-              <motion.button
+            {TEMPLATES.map((template) => (
+              <button
                 key={template.id}
                 type="button"
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
                 onClick={() => setPreviewId(template.id)}
                 className="group rounded-xl border bg-card overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 text-left w-full"
               >
@@ -54,7 +49,7 @@ export function TemplateGallery() {
                   <p className="text-xs text-muted-foreground mt-1">{template.description}</p>
                   <p className="text-xs text-primary mt-2 font-medium">Click to preview →</p>
                 </div>
-              </motion.button>
+              </button>
             ))}
           </div>
           <div className="text-center mt-10">

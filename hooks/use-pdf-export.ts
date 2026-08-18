@@ -28,14 +28,26 @@ function injectExportStyles(doc: Document) {
   doc.head.appendChild(style);
 }
 
-function getResumePageElement(rootId: string): HTMLElement {
-  const root = document.getElementById(rootId);
-  if (!root) throw new Error("Export target not found");
+function waitForResumePageElement(rootId: string, timeoutMs = 4000): Promise<HTMLElement> {
+  return new Promise((resolve, reject) => {
+    const started = Date.now();
 
-  const page = root.querySelector("[data-resume-page]") as HTMLElement | null;
-  if (!page) throw new Error("Resume page not found");
+    const check = () => {
+      const root = document.getElementById(rootId);
+      const page = root?.querySelector("[data-resume-page]") as HTMLElement | null;
+      if (page) {
+        resolve(page);
+        return;
+      }
+      if (Date.now() - started > timeoutMs) {
+        reject(new Error("Export target not ready"));
+        return;
+      }
+      requestAnimationFrame(check);
+    };
 
-  return page;
+    check();
+  });
 }
 
 function sanitizeFilename(name: string): string {
@@ -53,7 +65,7 @@ export function usePdfExport() {
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
 
-      const page = getResumePageElement(elementId);
+      const page = await waitForResumePageElement(elementId);
 
       const canvas = await html2canvas(page, {
         scale: 2,
@@ -112,7 +124,7 @@ export function usePdfExport() {
   const printResume = useCallback(async (elementId: string) => {
     try {
       await document.fonts.ready;
-      const page = getResumePageElement(elementId);
+      const page = await waitForResumePageElement(elementId);
       const content = page.outerHTML;
 
       const printWindow = window.open("", "_blank");

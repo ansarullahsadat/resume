@@ -4,7 +4,7 @@ export function getResumeFontStack(fontFamily: string): string {
     case "Inter":
       return "var(--font-inter), Inter, system-ui, sans-serif";
     case "Roboto":
-      return "var(--font-roboto), Roboto, system-ui, sans-serif";
+      return "Roboto, Arial, system-ui, sans-serif";
     case "Georgia":
       return "Georgia, 'Times New Roman', serif";
     case "Times New Roman":

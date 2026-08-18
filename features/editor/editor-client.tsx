@@ -69,6 +69,7 @@ export function EditorClient({ initialResume }: EditorClientProps) {
   const { resume, setResume, updateTitle, isSaving, isDirty, lastSaved } = useResumeStore();
   const { save } = useAutoSave(initialResume.id);
   const { exportPdf, printResume, isExporting } = usePdfExport();
+  const [exportMounted, setExportMounted] = useState(false);
   const [leftPanel, setLeftPanel] = useState<Panel>("sections");
   const [mobileTab, setMobileTab] = useState<MobileTab>("edit");
   const [mobileEditView, setMobileEditView] = useState<MobileEditView>("sections");
@@ -92,9 +93,21 @@ export function EditorClient({ initialResume }: EditorClientProps) {
     }
   };
 
+  const withExportTarget = async (action: () => Promise<void>) => {
+    setExportMounted(true);
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    try {
+      await action();
+    } finally {
+      setExportMounted(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden">
-      <ResumeExportTarget />
+      {exportMounted && <ResumeExportTarget />}
       <header className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 border-b bg-card shrink-0 z-20 safe-top">
         <Button variant="ghost" size="icon" asChild className="shrink-0 h-9 w-9 touch-target">
           <Link href="/dashboard">
@@ -134,7 +147,7 @@ export function EditorClient({ initialResume }: EditorClientProps) {
             variant="outline"
             size="icon"
             className="h-9 w-9 touch-target sm:w-auto sm:px-3"
-            onClick={() => printResume("resume-export")}
+            onClick={() => withExportTarget(() => printResume("resume-export"))}
             title="Print"
           >
             <Printer className="h-4 w-4" />
@@ -143,7 +156,7 @@ export function EditorClient({ initialResume }: EditorClientProps) {
           <Button
             size="icon"
             className="h-9 w-9 touch-target sm:w-auto sm:px-3"
-            onClick={() => exportPdf("resume-export", resume.title)}
+            onClick={() => withExportTarget(() => exportPdf("resume-export", resume.title))}
             disabled={isExporting}
             title="Download PDF"
           >

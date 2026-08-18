@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/lib/supabase/client";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations/auth";
+import { getAppUrl } from "@/lib/app-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,8 +29,9 @@ export function ForgotPasswordForm() {
   const onSubmit = async (data: ForgotPasswordInput) => {
     setLoading(true);
     const supabase = createClient();
+    const appUrl = getAppUrl();
     const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${appUrl}/auth/callback?next=/reset-password`,
     });
 
     if (error) {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -67,10 +68,9 @@ export function CreateResumeDialog({
       <DialogContent className='max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Create new resume</DialogTitle>
-          <p>
-            Pick a template to start with. You can change it anytime in the
-            editor.
-          </p>
+          <DialogDescription>
+            Pick a template to start with. You can change it anytime in the editor.
+          </DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-2'>
