@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { ForgotPasswordForm } from "@/features/auth/forgot-password-form";
 
 export const metadata: Metadata = {
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
-      <ForgotPasswordForm />
+      <Suspense fallback={null}>
+        <ForgotPasswordForm />
+      </Suspense>
     </div>
   );
 }

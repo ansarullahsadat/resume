@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations/auth";
@@ -13,8 +14,18 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 export function ForgotPasswordForm() {
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const linkError = searchParams.get("error");
+
+  useEffect(() => {
+    if (linkError === "expired") {
+      toast.error("That reset link expired. Request a new one below.");
+    } else if (linkError === "invalid") {
+      toast.error("That reset link is invalid. Request a new one below.");
+    }
+  }, [linkError]);
 
   const {
     register,
