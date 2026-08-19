@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -14,9 +14,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
+async function establishRecoverySession(): Promise<boolean> {
+  const supabase = createClient();
+
+  const { data: existing } = await supabase.auth.getSession();
+  if (existing.session) return true;
+
+  const hash = window.location.hash.replace(/^#/, "");
+  if (hash) {
+    const params = new URLSearchParams(hash);
+    const access_token = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
+
+    if (access_token && refresh_token) {
+      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+      if (!error) {
+        window.history.replaceState(null, "", window.location.pathname);
+        return true;
+      }
+    }
+  }
+
+  const query = new URLSearchParams(window.location.search);
+  const code = query.get("code");
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      window.history.replaceState(null, "", window.location.pathname);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function ResetPasswordForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
 
   const {
     register,
@@ -25,6 +61,23 @@ export function ResetPasswordForm() {
   } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
   });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    establishRecoverySession().then((ok) => {
+      if (cancelled) return;
+      setHasSession(ok);
+      setChecking(false);
+      if (!ok) {
+        toast.error("Reset link expired or invalid. Please request a new one.");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const onSubmit = async (data: ResetPasswordInput) => {
     setLoading(true);
@@ -50,6 +103,35 @@ export function ResetPasswordForm() {
     router.push("/dashboard");
     router.refresh();
   };
+
+  if (checking) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardContent className="flex flex-col items-center justify-center py-12 gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Verifying your reset link…</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!hasSession) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Link expired</CardTitle>
+          <CardDescription>
+            This reset link is invalid or has already been used. Request a new one below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button className="w-full" asChild>
+            <Link href="/forgot-password">Request new reset link</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md">
@@ -88,12 +170,6 @@ export function ResetPasswordForm() {
             Update password
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Link not working?{" "}
-          <Link href="/forgot-password" className="text-primary hover:underline">
-            Request a new reset email
-          </Link>
-        </p>
       </CardContent>
     </Card>
   );

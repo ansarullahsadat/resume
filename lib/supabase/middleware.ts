@@ -43,6 +43,10 @@ export async function updateSession(request: NextRequest) {
   const isResetPasswordRoute =
     request.nextUrl.pathname.startsWith("/reset-password")
 
+  const isAuthHandler =
+    request.nextUrl.pathname.startsWith("/auth/callback") ||
+    request.nextUrl.pathname.startsWith("/auth/confirm")
+
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/editor") ||
@@ -55,7 +59,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthRoute && !isResetPasswordRoute) {
+  if (user && isAuthRoute && !isResetPasswordRoute && !isAuthHandler) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)

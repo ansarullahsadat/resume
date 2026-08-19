@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { forgotPasswordSchema } from "@/lib/validations/auth";
-import { getAuthCallbackUrl } from "@/lib/app-url";
+import { getAuthConfirmUrl } from "@/lib/app-url";
 
 function friendlyAuthError(message: string): string {
   const lower = message.toLowerCase();
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient();
-    const redirectTo = getAuthCallbackUrl("/reset-password");
+    const redirectTo = getAuthConfirmUrl("/reset-password");
 
     const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
       redirectTo,

@@ -33,3 +33,8 @@ export function getAppUrl(): string {
 export function getAuthCallbackUrl(next = "/reset-password"): string {
   return `${getServerAppUrl()}/auth/callback?next=${encodeURIComponent(next)}`;
 }
+
+/** Preferred redirect for password-reset emails (Supabase appends token_hash). */
+export function getAuthConfirmUrl(next = "/reset-password"): string {
+  return `${getServerAppUrl()}/auth/confirm?next=${encodeURIComponent(next)}`;
+}
